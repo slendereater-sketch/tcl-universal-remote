@@ -1,0 +1,17 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches/compute-pixel-perfect-diff.xml
+/.idea/dictionaries
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/assetWizardSettings.xml
+/.idea/navEditor.xml
+/build
+/.externalNativeBuild
+/.cxx
+/captures
+.externalNativeBuild
+.cxx
+local.properties
