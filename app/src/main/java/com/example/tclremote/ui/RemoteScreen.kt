@@ -22,6 +22,7 @@ import com.example.tclremote.ui.components.HugeButton
 @Composable
 fun RemoteScreen(viewModel: RemoteViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = Modifier
@@ -32,7 +33,22 @@ fun RemoteScreen(viewModel: RemoteViewModel) {
     ) {
         if (uiState.selectedDevice == null) {
             DiscoveryView(uiState.discoveredDevices, uiState.isScanning) { 
-                viewModel.selectDevice(it) 
+                val wifiManager = context.applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+                val localIp = android.text.format.Formatter.formatIpAddress(wifiManager.connectionInfo.ipAddress)
+                viewModel.startDiscovery(localIp)
+            }
+            
+            // Show device selection if devices found
+            LazyColumn {
+                items(uiState.discoveredDevices) { device ->
+                    Button(
+                        onClick = { viewModel.selectDevice(device) },
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                    ) {
+                        Text("${device.name} (${device.ip})", color = Color.White)
+                    }
+                }
             }
         } else {
             ActiveRemoteView(uiState.selectedDevice!!, viewModel::sendCommand)
@@ -41,23 +57,17 @@ fun RemoteScreen(viewModel: RemoteViewModel) {
 }
 
 @Composable
-fun DiscoveryView(devices: List<TvDevice>, isScanning: Boolean, onSelect: (TvDevice) -> Unit) {
+fun DiscoveryView(devices: List<TvDevice>, isScanning: Boolean, onRetry: () -> Unit) {
     Text("Select Your TCL TV", style = MaterialTheme.typography.headlineMedium, color = Color.White)
     Spacer(modifier = Modifier.height(16.dp))
     
     if (isScanning) {
         CircularProgressIndicator()
-    }
-
-    LazyColumn {
-        items(devices) { device ->
-            Button(
-                onClick = { onSelect(device) },
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-            ) {
-                Text("${device.name} (${device.ip})", color = Color.White)
-            }
+        Text("Scanning Wi-Fi...", color = Color.LightGray, modifier = Modifier.padding(top = 8.dp))
+    } else {
+        HugeButton(text = "Scan", onClick = onRetry)
+        if (devices.isEmpty()) {
+            Text("No TVs found. Ensure your TV is on and on the same Wi-Fi.", color = Color.Red, modifier = Modifier.padding(16.dp))
         }
     }
 }

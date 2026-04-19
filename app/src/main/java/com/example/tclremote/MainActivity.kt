@@ -1,6 +1,9 @@
 package com.example.tclremote
 
+import android.content.Context
+import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.text.format.Formatter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -15,9 +18,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Trigger discovery on start (assuming a common subnet for demo)
-        // In a real app, you'd fetch the actual local IP base.
-        viewModel.startDiscovery("192.168.1")
+        val localIp = getLocalIpAddress()
+        viewModel.startDiscovery(localIp)
 
         setContent {
             MaterialTheme {
@@ -26,5 +28,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun getLocalIpAddress(): String {
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        return Formatter.formatIpAddress(wifiManager.connectionInfo.ipAddress)
     }
 }

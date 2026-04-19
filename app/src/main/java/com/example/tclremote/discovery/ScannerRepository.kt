@@ -17,13 +17,17 @@ class ScannerRepository {
 
     /**
      * Scans the subnet for TVs on ports 8060 (Roku) and 5555 (ADB).
-     * @param baseIp The first three octets (e.g., "192.168.1")
+     * @param localIp The device's current local IP address (e.g., "192.168.1.15")
      */
-    fun scanSubnet(baseIp: String): Flow<TvDevice> = flow {
+    fun scanSubnet(localIp: String): Flow<TvDevice> = flow {
+        val baseIp = localIp.substringBeforeLast(".")
         coroutineScope {
             val scanJobs = (1..254).map { i ->
                 async(Dispatchers.IO) {
                     val ip = "$baseIp.$i"
+                    // Don't scan ourselves
+                    if (ip == localIp) return@async null
+                    
                     when {
                         isPortOpen(ip, 8060) -> TvDevice(ip, TvType.ROKU)
                         isPortOpen(ip, 5555) -> TvDevice(ip, TvType.ANDROID_TV)
